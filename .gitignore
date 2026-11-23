@@ -1,6 +1,26 @@
-
 # Environment
 .env
 .env.local
 *.env
 !*.env.example
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+# Django stuff (if any)
+# Flask stuff (if any)
+
+# Uploads and data
+backend/app/uploads/
+backend/data/
+
+# Node
+node_modules/
+frontend/dist/
+
+# OS files
+.DS_Store
+Thumbs.db
