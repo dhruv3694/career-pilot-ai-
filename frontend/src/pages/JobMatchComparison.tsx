@@ -77,44 +77,6 @@ export const JobMatchComparison: React.FC = () => {
   const [comparing, setComparing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
-  const [tailoringForId, setTailoringForId] = useState<string | null>(null);
-  const [tailoredData, setTailoredData] = useState<{
-    tailored_summary: string;
-    prioritized_skills: string[];
-    tailored_bullet_points: string[];
-    cover_letter: string;
-  } | null>(null);
-  const [tailorModalOpen, setTailorModalOpen] = useState(false);
-
-  const handleGenerateTailored = async (job: {
-    id: string;
-    title: string;
-    employer?: string | null;
-    description?: string;
-    required_skills?: string[];
-  }) => {
-    if (!resumeId) {
-      setError('Please extract a resume first in Resume Studio.');
-      return;
-    }
-    setTailoringForId(job.id);
-    setError(null);
-    try {
-      const res = await api.tailorApplication({
-        resume_id: resumeId,
-        job_title: job.title,
-        employer: job.employer || undefined,
-        job_description: job.description || undefined,
-        required_skills: job.required_skills || [],
-      });
-      setTailoredData(res.tailored);
-      setTailorModalOpen(true);
-    } catch (e: any) {
-      setError(e.message || 'Failed to generate tailored application documents');
-    } finally {
-      setTailoringForId(null);
-    }
-  };
 
   const availableJobs = useMemo(() => {
     const combined = [...savedJobs, ...recentJobs];
@@ -455,22 +417,6 @@ export const JobMatchComparison: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleGenerateTailored(result.job)}
-                    disabled={tailoringForId === result.job.id}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition-all"
-                  >
-                    {tailoringForId === result.job.id ? (
-                      <LoaderCircle className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <FileDown className="w-3.5 h-3.5" />
-                    )}
-                    <span>Generate Tailored Resume & Cover Letter</span>
-                  </button>
-                </div>
-
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {Object.entries(result.match.score_breakdown).map(([category, points]) => (
                     <div key={category} className="rounded-lg bg-slate-950/70 p-3">
@@ -572,94 +518,6 @@ export const JobMatchComparison: React.FC = () => {
           </div>
         ) : <p className="mt-4 text-sm text-slate-500">No saved comparisons for this resume yet.</p>}
       </section>
-
-      {/* Tailored Application Modal */}
-      {tailorModalOpen && tailoredData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-3xl max-h-[85vh] overflow-y-auto rounded-2xl border border-slate-700 bg-slate-900 p-6 space-y-6 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-              <div>
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <FileDown className="w-5 h-5 text-indigo-400" />
-                  <span>Tailored Application Assets</span>
-                </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Custom-tailored summary, targeted bullets, and ready-to-send cover letter.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setTailorModalOpen(false)}
-                className="text-xs text-slate-400 hover:text-white px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 font-medium"
-              >
-                Close
-              </button>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              <div>
-                <label className="text-slate-400 font-semibold uppercase tracking-wider text-[11px]">
-                  Targeted Executive Summary
-                </label>
-                <div className="mt-1.5 p-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 leading-relaxed font-sans">
-                  {tailoredData.tailored_summary}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-slate-400 font-semibold uppercase tracking-wider text-[11px]">
-                  Prioritized High-Relevance Skills
-                </label>
-                <div className="mt-1.5 flex flex-wrap gap-1.5">
-                  {tailoredData.prioritized_skills.map((skill, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2.5 py-1 rounded-md bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 font-medium"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-slate-400 font-semibold uppercase tracking-wider text-[11px]">
-                  Role-Tailored Bullet Points
-                </label>
-                <ul className="mt-1.5 space-y-2 p-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-200">
-                  {tailoredData.tailored_bullet_points.map((bullet, idx) => (
-                    <li key={idx} className="flex items-start gap-2">
-                      <span className="text-indigo-400 font-bold">•</span>
-                      <span>{bullet}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-slate-400 font-semibold uppercase tracking-wider text-[11px]">
-                    Tailored Cover Letter
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      navigator.clipboard.writeText(tailoredData.cover_letter);
-                      alert('Cover letter copied to clipboard!');
-                    }}
-                    className="text-[11px] text-indigo-400 hover:text-indigo-300 font-semibold underline"
-                  >
-                    Copy to Clipboard
-                  </button>
-                </div>
-                <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 whitespace-pre-line leading-relaxed font-sans">
-                  {tailoredData.cover_letter}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

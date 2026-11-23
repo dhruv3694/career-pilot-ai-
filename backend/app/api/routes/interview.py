@@ -69,49 +69,15 @@ async def start_interview_session(payload: StartSessionRequest):
 @router.post("/evaluate")
 async def evaluate_candidate_answer(payload: SubmitAnswerRequest):
     """Evaluate candidate response using deterministic rubrics and LLM feedback."""
-    clean_answer = payload.candidate_answer.strip()
-    if not clean_answer:
-        raise HTTPException(status_code=400, detail="Please enter an answer before requesting an evaluation.")
-    
-    # If the answer is extremely short (e.g. fewer than 10 characters like 'hello'), evaluate and give constructive feedback instead of crashing with HTTP 400!
-    if len(clean_answer) < 10:
-        return {
-            "status": "success",
-            "evaluation": {
-                "question_id": payload.question_id,
-                "score": 5.0,
-                "overall_score": 5.0,
-                "rating": "Needs Practice",
-                "feedback": "Your answer is too brief to demonstrate technical competence. Aim to provide a comprehensive response explaining key concepts, architecture, and practical examples.",
-                "strengths": ["Submitted response for evaluation"],
-                "improvements": [
-                    "Elaborate on the core concepts with specific definitions",
-                    "Structure your answer using the STAR method or clear bullet points",
-                    "Provide concrete code or architectural examples"
-                ],
-                "model_answer": payload.sample_answer or "A strong answer thoroughly covers technical trade-offs, internal mechanisms, and real-world performance impacts.",
-                "llm_feedback": "Answer provided is under 10 characters. A thorough answer should explain the 'why' and 'how' behind the concept rather than a greeting or short phrase.",
-                "provider_used": "deterministic_fallback",
-                "is_proprietary": False,
-                "is_fallback": True,
-            }
-        }
+    if len(payload.candidate_answer.strip()) < 10:
+        raise HTTPException(status_code=400, detail="Answer is too short to evaluate.")
 
     # 1. Deterministic Rubric Evaluation
-    question_payload = {
-        "id": payload.question_id,
-        "question": payload.question,
-        "category": payload.category or "technical",
-        "sample_answer": payload.sample_answer or "",
-    }
     eval_result = await engine.evaluate_response(
-        question=question_payload,
-        response=payload.candidate_answer,
+        question_id=payload.question_id,
+        response_text=payload.candidate_answer,
     )
     eval_dict = eval_result.model_dump()
-    eval_dict["overall_score"] = round(eval_result.score, 1)
-    eval_dict["improvements"] = eval_result.areas_for_improvement
-    eval_dict["rating"] = "Strong" if eval_result.score >= 75 else "Proficient" if eval_result.score >= 55 else "Needs Practice"
 
     # 2. Try LLM enrichment if available
     try:

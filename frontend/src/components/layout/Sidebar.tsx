@@ -15,24 +15,19 @@ import {
   Sparkles,
 } from 'lucide-react';
 
-interface NavItem {
-  to: string;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  badge?: string;
-  highlight?: boolean;
-}
-
-const NAV_ITEMS: NavItem[] = [
+const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/resume-studio', label: 'Resume & ATS Studio', icon: FileText },
+  { to: '/resume-studio', label: 'Resume Studio', icon: FileText },
+  { to: '/ats-validation', label: 'ATS Validation', icon: CheckCircle2 },
   { to: '/jobs', label: 'Job Explorer', icon: Briefcase },
-  { to: '/matching', label: 'Job Match & Tailoring', icon: GitCompare },
-  { to: '/interview', label: 'Interview Lab', icon: MessagesSquare },
+  { to: '/matching', label: 'Job Match Comparison', icon: GitCompare },
   { to: '/roadmap', label: 'Career Roadmap', icon: Milestone },
+  { to: '/interview', label: 'Interview Lab', icon: MessagesSquare },
   { to: '/events', label: 'Career Fairs & Events', icon: CalendarDays },
   { to: '/agents', label: 'Agent Control Center', icon: Network, badge: 'LangGraph' },
-  { to: '/settings', label: 'Settings & Privacy', icon: Sliders },
+  { to: '/memory', label: 'Memory & Privacy', icon: Database },
+  { to: '/settings', label: 'Approvals & Settings', icon: Sliders },
+  { to: '/demonstrations', label: 'Jury Demo (A–F)', icon: Sparkles, highlight: true },
 ];
 
 export const Sidebar: React.FC = () => {

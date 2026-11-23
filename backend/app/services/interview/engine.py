@@ -990,96 +990,29 @@ class InterviewEngine:
         role_key = role.lower().replace(" ", "_").replace("-", "_")
         bank = QUESTION_BANK.get(role_key) or QUESTION_BANK.get("software_engineer", {})
         
+        categories = list(bank.keys()) if session_type == "mixed" else [session_type]
         questions: list[Question] = []
-        seen_texts: set[str] = set()
-
-        if session_type != "mixed":
-            # STRICT MODE: Only include questions that match the chosen format!
-            # 1. First, take from the user's selected role in this format
-            for item in bank.get(session_type, []):
-                if item["question"] not in seen_texts:
-                    seen_texts.add(item["question"])
-                    questions.append(Question(
-                        question=item["question"],
-                        category=session_type,
-                        difficulty=item.get("difficulty", "medium"),
-                        role=role,
-                        skills_tested=item.get("skills_tested", []),
-                        sample_answer=item.get("sample_answer", ""),
-                        follow_ups=item.get("follow_ups", []),
-                    ))
+        for cat in categories:
+            items = bank.get(cat, [])
+            for item in items:
+                questions.append(Question(
+                    question=item["question"],
+                    category=cat,
+                    difficulty=item.get("difficulty", "medium"),
+                    role=role,
+                    skills_tested=item.get("skills_tested", []),
+                    sample_answer=item.get("sample_answer", ""),
+                    follow_ups=item.get("follow_ups", []),
+                ))
                 if len(questions) >= count:
                     break
-
-            # 2. If user requests more, take from other roles strictly in THIS SAME format
-            if len(questions) < count:
-                for other_role, other_bank in QUESTION_BANK.items():
-                    if other_role == role_key:
-                        continue
-                    for item in other_bank.get(session_type, []):
-                        if item["question"] not in seen_texts:
-                            seen_texts.add(item["question"])
-                            questions.append(Question(
-                                question=item["question"],
-                                category=session_type,
-                                difficulty=item.get("difficulty", "medium"),
-                                role=role,
-                                skills_tested=item.get("skills_tested", []),
-                                sample_answer=item.get("sample_answer", ""),
-                                follow_ups=item.get("follow_ups", []),
-                            ))
-                        if len(questions) >= count:
-                            break
-                    if len(questions) >= count:
-                        break
-        else:
-            # MIXED MODE: Can take from all categories
-            for cat in bank.keys():
-                for item in bank.get(cat, []):
-                    if item["question"] not in seen_texts:
-                        seen_texts.add(item["question"])
-                        questions.append(Question(
-                            question=item["question"],
-                            category=cat,
-                            difficulty=item.get("difficulty", "medium"),
-                            role=role,
-                            skills_tested=item.get("skills_tested", []),
-                            sample_answer=item.get("sample_answer", ""),
-                            follow_ups=item.get("follow_ups", []),
-                        ))
-                    if len(questions) >= count:
-                        break
-                if len(questions) >= count:
-                    break
-
-            if len(questions) < count:
-                for other_role, other_bank in QUESTION_BANK.items():
-                    if other_role == role_key:
-                        continue
-                    for cat, items in other_bank.items():
-                        for item in items:
-                            if item["question"] not in seen_texts:
-                                seen_texts.add(item["question"])
-                                questions.append(Question(
-                                    question=item["question"],
-                                    category=cat,
-                                    difficulty=item.get("difficulty", "medium"),
-                                    role=role,
-                                    skills_tested=item.get("skills_tested", []),
-                                    sample_answer=item.get("sample_answer", ""),
-                                    follow_ups=item.get("follow_ups", []),
-                                ))
-                            if len(questions) >= count:
-                                break
-                        if len(questions) >= count:
-                            break
-                    if len(questions) >= count:
-                        break
+            if len(questions) >= count:
+                break
         
         session = InterviewSession(
             candidate_id=1,
             session_type=session_type,
-            questions=questions[:count],
+            questions=questions,
         )
         return session.model_dump()
 

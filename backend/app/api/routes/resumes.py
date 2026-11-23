@@ -62,33 +62,6 @@ class AnalyzeAgainstJobRequest(BaseModel):
     preferred_skills: List[str] = Field(default_factory=list)
 
 
-class TailorApplicationRequest(BaseModel):
-    resume_id: str
-    job_title: str
-    employer: Optional[str] = None
-    job_description: Optional[str] = None
-    required_skills: List[str] = Field(default_factory=list)
-
-
-@router.post("/tailor-application")
-async def tailor_application(req: TailorApplicationRequest):
-    """Generate role-tailored resume bullets and cover letter without heavy local models."""
-    if req.resume_id not in RESUME_STORE:
-        raise HTTPException(status_code=404, detail="Resume not found in current session.")
-    
-    record = RESUME_STORE[req.resume_id]
-    profile = record.get("profile", {})
-    
-    result = await analyzer.generate_tailored_application(
-        profile=profile,
-        job_title=req.job_title,
-        employer=req.employer,
-        job_description=req.job_description,
-        required_skills=req.required_skills,
-    )
-    return {"status": "success", "tailored": result}
-
-
 @router.post("/upload")
 async def upload_resume(file: UploadFile = File(...)):
     """Upload resume document (PDF, DOCX, TXT) and run automated extraction."""

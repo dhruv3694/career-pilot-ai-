@@ -1,4 +1,4 @@
-import {
+﻿import {
   CandidateProfile,
   ATSReport,
   JobItem,
@@ -59,22 +59,6 @@ export const api = {
     if (!res.ok) throw new Error(data.detail || 'Failed to analyze resume against this job');
     return data;
   },
-  async tailorApplication(payload: {
-    resume_id: string;
-    job_title: string;
-    employer?: string;
-    job_description?: string;
-    required_skills?: string[];
-  }) {
-    const res = await fetch(`${API_BASE}/resumes/tailor-application`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || 'Failed to tailor application');
-    return data;
-  },
 
   // Jobs
   async searchJobs(query = 'software engineer', location?: string, sources: string[] = ['greenhouse', 'lever', 'web'], limit = 30) {
@@ -124,19 +108,12 @@ export const api = {
   // Interview
   async startInterviewSession(data: { role: string; session_type: string; count: number; skills?: string[] }) {
     const res = await fetch(`${API_BASE}/interview/session/start`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || 'Failed to start interview session');
-    }
+    if (!res.ok) throw new Error((await res.json()).detail || 'Failed to start session');
     return res.json();
   },
   async evaluateInterviewAnswer(data: any) {
     const res = await fetch(`${API_BASE}/interview/evaluate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      const msg = typeof err.detail === 'string' ? err.detail : (Array.isArray(err.detail) ? err.detail.map((d: any) => d.msg || JSON.stringify(d)).join(', ') : 'Failed to evaluate answer');
-      throw new Error(msg);
-    }
+    if (!res.ok) throw new Error((await res.json()).detail || 'Failed to evaluate');
     return res.json();
   },
   async getInterviewRoles() { const res = await fetch(`${API_BASE}/interview/roles`); return res.json(); },
